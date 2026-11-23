@@ -1,0 +1,550 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered student, project lead, member, or administrator profile",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "fullName": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 150 },
+        "photoURL": { "type": "string", "maxLength": 500 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "college": { "type": "string", "maxLength": 150 },
+        "city": { "type": "string", "maxLength": 100 },
+        "state": { "type": "string", "maxLength": 100 },
+        "branch": { "type": "string", "maxLength": 100 },
+        "academicYear": { "type": "string", "maxLength": 20 },
+        "technicalSkills": { "type": "array" },
+        "nonTechnicalSkills": { "type": "array" },
+        "interests": { "type": "array" },
+        "portfolioUrl": { "type": "string", "maxLength": 250 },
+        "githubUrl": { "type": "string", "maxLength": 250 },
+        "linkedinUrl": { "type": "string", "maxLength": 250 },
+        "bio": { "type": "string", "maxLength": 600 },
+        "weeklyAvailability": { "type": "string", "maxLength": 50 },
+        "role": { "type": "string", "enum": ["visitor", "student", "member", "project_lead", "lead", "mentor", "reviewer", "admin", "superadmin"] },
+        "membershipStatus": { "type": "string", "enum": ["unregistered", "draft", "submitted", "under_review", "shortlisted", "approved", "rejected", "more_info_required"] },
+        "escMemberId": { "type": "string", "maxLength": 64 },
+        "accountStatus": { "type": "string", "enum": ["active", "inactive", "suspended"] },
+        "approvalDate": { "type": "string" },
+        "approvedBy": { "type": "string", "maxLength": 150 },
+        "lastActiveAt": { "type": "string" },
+        "startupTeamId": { "type": "string", "maxLength": 128 },
+        "teamRole": { "type": "string", "maxLength": 30 },
+        "createdAt": { "type": "string" },
+        "lastLoginAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "fullName", "email", "role", "membershipStatus"]
+    },
+    "AdminAllowlistEntry": {
+      "title": "AdminAllowlistEntry",
+      "description": "Protected administrator allowlist record keyed by Firebase UID",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 150 },
+        "role": { "type": "string", "enum": ["admin", "superadmin"] },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["email", "role"]
+    },
+    "Application": {
+      "title": "Application",
+      "description": "ESC Membership application submission",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "fullName": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 150 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "college": { "type": "string", "maxLength": 150 },
+        "city": { "type": "string", "maxLength": 100 },
+        "state": { "type": "string", "maxLength": 100 },
+        "branch": { "type": "string", "maxLength": 100 },
+        "academicYear": { "type": "string", "maxLength": 20 },
+        "technicalSkills": { "type": "array" },
+        "nonTechnicalSkills": { "type": "array" },
+        "portfolioUrl": { "type": "string", "maxLength": 250 },
+        "whyJoin": { "type": "string", "maxLength": 1500 },
+        "startupInterests": { "type": "array" },
+        "hasExistingIdea": { "type": "boolean" },
+        "existingIdeaSummary": { "type": "string", "maxLength": 1000 },
+        "teamGoal": { "type": "string", "enum": ["build_team", "join_team", "open_to_both"] },
+        "weeklyAvailability": { "type": "string", "maxLength": 50 },
+        "status": { "type": "string", "enum": ["draft", "submitted", "under_review", "shortlisted", "approved", "rejected", "more_info_required"] },
+        "adminNotes": { "type": "string", "maxLength": 2000 },
+        "reviewedBy": { "type": "string", "maxLength": 128 },
+        "approvalDate": { "type": "string" },
+        "approvedBy": { "type": "string", "maxLength": 150 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "fullName", "email", "status"]
+    },
+    "StartupIdea": {
+      "title": "StartupIdea",
+      "description": "Startup Lab idea submission",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 150 },
+        "problemStatement": { "type": "string", "maxLength": 1500 },
+        "targetAudience": { "type": "string", "maxLength": 500 },
+        "proposedSolution": { "type": "string", "maxLength": 2000 },
+        "industry": { "type": "string", "maxLength": 100 },
+        "uniqueValueProposition": { "type": "string", "maxLength": 800 },
+        "stage": { "type": "string", "enum": ["idea", "research", "prototype", "mvp", "launched"] },
+        "demoUrl": { "type": "string", "maxLength": 250 },
+        "skillsRequired": { "type": "array" },
+        "teamRequirements": { "type": "string", "maxLength": 800 },
+        "fundingRequirements": { "type": "string", "maxLength": 800 },
+        "isPublic": { "type": "boolean" },
+        "authorId": { "type": "string", "maxLength": 128 },
+        "authorName": { "type": "string", "maxLength": 100 },
+        "authorEmail": { "type": "string", "maxLength": 150 },
+        "reviewStatus": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "adminFeedback": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["title", "problemStatement", "proposedSolution", "stage", "authorId", "reviewStatus"]
+    },
+    "ProblemStatement": {
+      "title": "ProblemStatement",
+      "description": "Problem Discovery Bank entry",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 150 },
+        "description": { "type": "string", "maxLength": 2500 },
+        "industry": { "type": "string", "maxLength": 100 },
+        "difficulty": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] },
+        "status": { "type": "string", "enum": ["open", "team_formation", "in_progress", "solved", "archived"] },
+        "skillsRequired": { "type": "array" },
+        "interestCount": { "type": "number" },
+        "interestedUserIds": { "type": "array" },
+        "authorId": { "type": "string", "maxLength": 128 },
+        "authorName": { "type": "string", "maxLength": 100 },
+        "verifiedByAdmin": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["title", "description", "industry", "difficulty", "status"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Student engineering project workspace",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 150 },
+        "description": { "type": "string", "maxLength": 2500 },
+        "category": { "type": "string", "maxLength": 100 },
+        "leaderId": { "type": "string", "maxLength": 128 },
+        "leaderName": { "type": "string", "maxLength": 100 },
+        "objectives": { "type": "array" },
+        "requiredSkills": { "type": "array" },
+        "teamMemberIds": { "type": "array" },
+        "status": { "type": "string", "enum": ["recruiting", "in_progress", "review", "completed"] },
+        "demoUrl": { "type": "string", "maxLength": 250 },
+        "repoUrl": { "type": "string", "maxLength": 250 },
+        "milestones": { "type": "array" },
+        "tasks": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["title", "description", "category", "leaderId", "status"]
+    },
+    "Certificate": {
+      "title": "Certificate",
+      "description": "Authorized verifiable certificate",
+      "type": "object",
+      "properties": {
+        "certId": { "type": "string", "maxLength": 64 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "studentName": { "type": "string", "maxLength": 100 },
+        "studentEmail": { "type": "string", "maxLength": 150 },
+        "certificateTitle": { "type": "string", "maxLength": 150 },
+        "competitionName": { "type": "string", "maxLength": 200 },
+        "achievement": { "type": "string", "maxLength": 200 },
+        "activityName": { "type": "string", "maxLength": 200 },
+        "organization": { "type": "string", "maxLength": 100 },
+        "issueDate": { "type": "string", "maxLength": 50 },
+        "authorizedSigner": { "type": "string", "maxLength": 100 },
+        "authorizedSignerTitle": { "type": "string", "maxLength": 120 },
+        "logoUrl": { "type": "string", "maxLength": 350000 },
+        "signatureUrl": { "type": "string", "maxLength": 350000 },
+        "templateStyle": { "type": "string", "enum": ["charcoal_editorial", "obsidian_grid", "ivory_executive"] },
+        "verificationHash": { "type": "string", "maxLength": 128 },
+        "verificationUrl": { "type": "string", "maxLength": 300 },
+        "status": { "type": "string", "enum": ["valid", "revoked"] },
+        "downloadedAt": { "type": "string" },
+        "downloadCount": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["certId", "studentId", "studentName", "activityName", "status", "verificationHash"]
+    },
+    "Challenge": {
+      "title": "Challenge",
+      "description": "Engineering challenge created and published exclusively by Super Admin",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 180 },
+        "description": { "type": "string", "maxLength": 4000 },
+        "category": { "type": "string", "maxLength": 100 },
+        "posterUrl": { "type": "string", "maxLength": 400000 },
+        "eligibility": { "type": "string", "maxLength": 600 },
+        "requiredSkills": { "type": "array" },
+        "participationType": { "type": "string", "enum": ["individual", "team", "both"] },
+        "minTeamSize": { "type": "number" },
+        "maxTeamSize": { "type": "number" },
+        "startDateTime": { "type": "string", "maxLength": 60 },
+        "registrationDeadline": { "type": "string", "maxLength": 60 },
+        "submissionDeadline": { "type": "string", "maxLength": 60 },
+        "rules": { "type": "string", "maxLength": 3000 },
+        "submissionInstructions": { "type": "string", "maxLength": 3000 },
+        "requiredSubmissionFiles": { "type": "array" },
+        "prizeOrRewards": { "type": "string", "maxLength": 800 },
+        "certificateAvailable": { "type": "boolean" },
+        "contactInfo": { "type": "string", "maxLength": 300 },
+        "status": { "type": "string", "enum": ["draft", "scheduled", "live", "registration_closed", "completed", "archived"] },
+        "isPublished": { "type": "boolean" },
+        "registeredCount": { "type": "number" },
+        "submissionCount": { "type": "number" },
+        "createdBy": { "type": "string", "maxLength": 150 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["title", "description", "category", "participationType", "status", "isPublished"]
+    },
+    "ChallengeRegistration": {
+      "title": "ChallengeRegistration",
+      "description": "Student participant or team registration for a challenge",
+      "type": "object",
+      "properties": {
+        "challengeId": { "type": "string", "maxLength": 128 },
+        "challengeTitle": { "type": "string", "maxLength": 180 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "userName": { "type": "string", "maxLength": 120 },
+        "userEmail": { "type": "string", "maxLength": 150 },
+        "college": { "type": "string", "maxLength": 150 },
+        "branch": { "type": "string", "maxLength": 100 },
+        "participationMode": { "type": "string", "enum": ["individual", "team"] },
+        "teamName": { "type": "string", "maxLength": 120 },
+        "teamMembers": { "type": "array" },
+        "skillsSummary": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["registered", "submitted", "shortlisted", "winner", "disqualified"] },
+        "registeredAt": { "type": "string" }
+      },
+      "required": ["challengeId", "userId", "userName", "participationMode", "status"]
+    },
+    "ChallengeSubmission": {
+      "title": "ChallengeSubmission",
+      "description": "Challenge project deliverable submission from a registered participant/team",
+      "type": "object",
+      "properties": {
+        "challengeId": { "type": "string", "maxLength": 128 },
+        "challengeTitle": { "type": "string", "maxLength": 180 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "userName": { "type": "string", "maxLength": 120 },
+        "userEmail": { "type": "string", "maxLength": 150 },
+        "teamName": { "type": "string", "maxLength": 120 },
+        "projectTitle": { "type": "string", "maxLength": 180 },
+        "summary": { "type": "string", "maxLength": 3000 },
+        "repoUrl": { "type": "string", "maxLength": 300 },
+        "demoVideoUrl": { "type": "string", "maxLength": 300 },
+        "deckOrDocUrl": { "type": "string", "maxLength": 300 },
+        "deliverablesChecklist": { "type": "array" },
+        "notes": { "type": "string", "maxLength": 1000 },
+        "reviewStatus": { "type": "string", "enum": ["submitted", "under_review", "needs_revision", "accepted", "winner"] },
+        "score": { "type": "number" },
+        "reviewerFeedback": { "type": "string", "maxLength": 1500 },
+        "submittedAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["challengeId", "userId", "projectTitle", "summary", "reviewStatus"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Community event or workshop managed exclusively by Super Admin",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 180 },
+        "description": { "type": "string", "maxLength": 4000 },
+        "posterUrl": { "type": "string", "maxLength": 400000 },
+        "type": { "type": "string", "enum": ["buildathon", "workshop", "competition", "challenge", "seminar", "mentorship", "networking"] },
+        "date": { "type": "string", "maxLength": 100 },
+        "startDateTime": { "type": "string", "maxLength": 60 },
+        "location": { "type": "string", "maxLength": 250 },
+        "meetingLink": { "type": "string", "maxLength": 300 },
+        "registrationDeadline": { "type": "string", "maxLength": 100 },
+        "eligibility": { "type": "string", "maxLength": 600 },
+        "maxParticipants": { "type": "number" },
+        "registeredCount": { "type": "number" },
+        "instructions": { "type": "string", "maxLength": 2500 },
+        "contactInfo": { "type": "string", "maxLength": 300 },
+        "certificateAvailable": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["draft", "scheduled", "live", "registration_closed", "completed", "archived"] },
+        "isPublished": { "type": "boolean" },
+        "prizes": { "type": "string", "maxLength": 500 },
+        "schedule": { "type": "string", "maxLength": 1500 },
+        "createdBy": { "type": "string", "maxLength": 150 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["title", "description", "type", "date", "isPublished"]
+    },
+    "EventRegistration": {
+      "title": "EventRegistration",
+      "description": "User ticket registration for an ESC event",
+      "type": "object",
+      "properties": {
+        "eventId": { "type": "string", "maxLength": 128 },
+        "eventTitle": { "type": "string", "maxLength": 180 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "userName": { "type": "string", "maxLength": 120 },
+        "userEmail": { "type": "string", "maxLength": 150 },
+        "college": { "type": "string", "maxLength": 150 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "notes": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["confirmed", "waitlist", "attended", "cancelled"] },
+        "registeredAt": { "type": "string" }
+      },
+      "required": ["eventId", "userId", "userName", "status"]
+    },
+    "Opportunity": {
+      "title": "Opportunity",
+      "description": "Grants, internships, labs, fellowships, and mentorship opportunities managed by Super Admin",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 180 },
+        "category": { "type": "string", "enum": ["grant", "internship", "fellowship", "lab_access", "mentorship", "ip_legal", "other"] },
+        "organization": { "type": "string", "maxLength": 150 },
+        "posterUrl": { "type": "string", "maxLength": 400000 },
+        "description": { "type": "string", "maxLength": 4000 },
+        "allocationOrStipend": { "type": "string", "maxLength": 200 },
+        "eligibility": { "type": "string", "maxLength": 800 },
+        "requiredSkills": { "type": "array" },
+        "locationOrMode": { "type": "string", "maxLength": 150 },
+        "applicationDeadline": { "type": "string", "maxLength": 100 },
+        "applyInstructions": { "type": "string", "maxLength": 2000 },
+        "externalApplyUrl": { "type": "string", "maxLength": 300 },
+        "contactInfo": { "type": "string", "maxLength": 300 },
+        "status": { "type": "string", "enum": ["draft", "live", "closed", "archived"] },
+        "isPublished": { "type": "boolean" },
+        "applicationsCount": { "type": "number" },
+        "createdBy": { "type": "string", "maxLength": 150 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["title", "category", "description", "status", "isPublished"]
+    },
+    "OpportunityApplication": {
+      "title": "OpportunityApplication",
+      "description": "Student application for an ESC opportunity",
+      "type": "object",
+      "properties": {
+        "opportunityId": { "type": "string", "maxLength": 128 },
+        "opportunityTitle": { "type": "string", "maxLength": 180 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "userName": { "type": "string", "maxLength": 120 },
+        "userEmail": { "type": "string", "maxLength": 150 },
+        "college": { "type": "string", "maxLength": 150 },
+        "branch": { "type": "string", "maxLength": 100 },
+        "portfolioUrl": { "type": "string", "maxLength": 300 },
+        "statement": { "type": "string", "maxLength": 2000 },
+        "status": { "type": "string", "enum": ["submitted", "under_review", "shortlisted", "approved", "rejected"] },
+        "adminNotes": { "type": "string", "maxLength": 1000 },
+        "appliedAt": { "type": "string" }
+      },
+      "required": ["opportunityId", "userId", "userName", "statement", "status"]
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "description": "Website announcement managed by administrators",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 150 },
+        "message": { "type": "string", "maxLength": 600 },
+        "type": { "type": "string", "enum": ["info", "event", "deadline", "highlight"] },
+        "linkPath": { "type": "string", "maxLength": 150 },
+        "linkLabel": { "type": "string", "maxLength": 60 },
+        "isActive": { "type": "boolean" },
+        "isPinned": { "type": "boolean" },
+        "createdBy": { "type": "string", "maxLength": 150 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["title", "message", "type", "isActive", "isPinned"]
+    },
+    "SiteSettings": {
+      "title": "SiteSettings",
+      "description": "Critical public website content and application cycle settings (Super Admin only)",
+      "type": "object",
+      "properties": {
+        "heroBadgeText": { "type": "string", "maxLength": 120 },
+        "heroAnnouncement": { "type": "string", "maxLength": 300 },
+        "applicationsOpen": { "type": "boolean" },
+        "applicationCycleLabel": { "type": "string", "maxLength": 100 },
+        "contactEmail": { "type": "string", "maxLength": 150 },
+        "whatsappCommunityUrl": { "type": "string", "maxLength": 500 },
+        "communityGuidelines": { "type": "string", "maxLength": 3000 },
+        "updatedAt": { "type": "string" },
+        "updatedBy": { "type": "string", "maxLength": 150 }
+      },
+      "required": ["applicationsOpen", "applicationCycleLabel"]
+    },
+    "CertificateSettings": {
+      "title": "CertificateSettings",
+      "description": "Default issuer, logo, signature, template, and formatting settings for ESC certificates (Super Admin only)",
+      "type": "object",
+      "properties": {
+        "organizationName": { "type": "string", "maxLength": 120 },
+        "issuerName": { "type": "string", "maxLength": 100 },
+        "issuerDesignation": { "type": "string", "maxLength": 150 },
+        "logoUrl": { "type": "string", "maxLength": 350000 },
+        "signatureUrl": { "type": "string", "maxLength": 350000 },
+        "backgroundTemplate": { "type": "string", "enum": ["charcoal_editorial", "obsidian_grid", "ivory_executive"] },
+        "defaultCertificateTitle": { "type": "string", "maxLength": 150 },
+        "defaultCompetitionName": { "type": "string", "maxLength": 200 },
+        "defaultIssueDate": { "type": "string", "maxLength": 50 },
+        "certIdFormat": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string" },
+        "updatedBy": { "type": "string", "maxLength": 150 }
+      },
+      "required": ["organizationName", "issuerName", "issuerDesignation", "backgroundTemplate"]
+    },
+    "UserNotification": {
+      "title": "UserNotification",
+      "description": "User-facing notification delivered by administrators or system",
+      "type": "object",
+      "properties": {
+        "recipientId": { "type": "string", "maxLength": 128 },
+        "senderName": { "type": "string", "maxLength": 100 },
+        "title": { "type": "string", "maxLength": 150 },
+        "message": { "type": "string", "maxLength": 1000 },
+        "type": { "type": "string", "enum": ["application", "idea", "event", "system"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["recipientId", "senderName", "message", "createdAt"]
+    },
+    "AdminAuditLog": {
+      "title": "AdminAuditLog",
+      "description": "Immutable administrative actions audit log",
+      "type": "object",
+      "properties": {
+        "adminId": { "type": "string", "maxLength": 128 },
+        "adminEmail": { "type": "string", "maxLength": 150 },
+        "action": { "type": "string", "maxLength": 100 },
+        "targetType": { "type": "string", "maxLength": 50 },
+        "targetId": { "type": "string", "maxLength": 128 },
+        "details": { "type": "string", "maxLength": 500 },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["adminId", "adminEmail", "action", "timestamp"]
+    },
+    "SupportTicket": {
+      "title": "SupportTicket",
+      "description": "Private ESC Need Help / Support ticket accessible only to the submitting user and verified administrators",
+      "type": "object",
+      "properties": {
+        "ticketId": { "type": "string", "maxLength": 64 },
+        "userUid": { "type": "string", "maxLength": 128 },
+        "fullName": { "type": "string", "maxLength": 120 },
+        "email": { "type": "string", "maxLength": 160 },
+        "category": { "type": "string", "enum": ["Fellowship Application", "Startup / Project", "Website / Technical Issue", "College Collaboration", "General Enquiry", "Other"] },
+        "subject": { "type": "string", "maxLength": 180 },
+        "description": { "type": "string", "maxLength": 4000 },
+        "attachmentName": { "type": "string", "maxLength": 180 },
+        "attachmentType": { "type": "string", "maxLength": 80 },
+        "status": { "type": "string", "enum": ["new", "under_review", "in_progress", "resolved", "closed"] },
+        "adminNotes": { "type": "string", "maxLength": 1500 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["ticketId", "fullName", "email", "category", "subject", "description", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Student, project lead, member, and administrator profiles"
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminAllowlistEntry" },
+      "description": "Protected administrator allowlist"
+    },
+    "/applications/{applicationId}": {
+      "schema": { "$ref": "#/entities/Application" },
+      "description": "Membership applications"
+    },
+    "/ideas/{ideaId}": {
+      "schema": { "$ref": "#/entities/StartupIdea" },
+      "description": "Startup Idea Lab submissions"
+    },
+    "/problems/{problemId}": {
+      "schema": { "$ref": "#/entities/ProblemStatement" },
+      "description": "Problem Discovery Platform problem statements"
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Engineering projects workspace"
+    },
+    "/certificates/{certId}": {
+      "schema": { "$ref": "#/entities/Certificate" },
+      "description": "Verifiable certificates"
+    },
+    "/challenges/{challengeId}": {
+      "schema": { "$ref": "#/entities/Challenge" },
+      "description": "Engineering challenges controlled exclusively by Super Admin"
+    },
+    "/challengeRegistrations/{regId}": {
+      "schema": { "$ref": "#/entities/ChallengeRegistration" },
+      "description": "Participant and team registrations for challenges"
+    },
+    "/challengeSubmissions/{subId}": {
+      "schema": { "$ref": "#/entities/ChallengeSubmission" },
+      "description": "Challenge deliverables and submissions"
+    },
+    "/events/{eventId}": {
+      "schema": { "$ref": "#/entities/Event" },
+      "description": "Events and workshops controlled exclusively by Super Admin"
+    },
+    "/eventRegistrations/{regId}": {
+      "schema": { "$ref": "#/entities/EventRegistration" },
+      "description": "Event ticket registrations"
+    },
+    "/opportunities/{opportunityId}": {
+      "schema": { "$ref": "#/entities/Opportunity" },
+      "description": "Grants, internships, labs, and mentorship opportunities controlled exclusively by Super Admin"
+    },
+    "/opportunityApplications/{appId}": {
+      "schema": { "$ref": "#/entities/OpportunityApplication" },
+      "description": "Student applications for opportunities"
+    },
+    "/announcements/{announcementId}": {
+      "schema": { "$ref": "#/entities/Announcement" },
+      "description": "Website announcements"
+    },
+    "/siteSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/SiteSettings" },
+      "description": "Website global settings managed by Super Admin"
+    },
+    "/certificateSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/CertificateSettings" },
+      "description": "Default certificate issuer, logo, signature, and template settings managed by Super Admin"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/UserNotification" },
+      "description": "Applicant and member notifications"
+    },
+    "/adminLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AdminAuditLog" },
+      "description": "Immutable administrative audit trail logs"
+    },
+    "/supportTickets/{ticketId}": {
+      "schema": { "$ref": "#/entities/SupportTicket" },
+      "description": "Private support requests viewable only by submitting user or verified ESC administrators"
+    }
+  }
+}

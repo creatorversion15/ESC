@@ -1,0 +1,363 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isPrimarySuperAdminEmail() {
+      return isVerified() &&
+        'email' in request.auth.token &&
+        request.auth.token.email is string &&
+        request.auth.token.email.lower() == 'soviraj50@gmail.com';
+    }
+
+    function hasAdminDoc() {
+      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function adminDocRole() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role;
+    }
+
+    function isSuperAdmin() {
+      return isVerified() && (
+        isPrimarySuperAdminEmail() ||
+        (hasAdminDoc() && adminDocRole() == 'superadmin')
+      );
+    }
+
+    function isAdmin() {
+      return isSuperAdmin() || (
+        isVerified() && hasAdminDoc() && adminDocRole() in ['admin', 'superadmin']
+      );
+    }
+
+    // Protected Admins registry (only Super Admin can appoint/revoke admins)
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && (isOwner(adminId) || isAdmin());
+      allow list: if isAdmin();
+      allow create, update: if isValidId(adminId) && (
+        isSuperAdmin() ||
+        (
+          isOwner(adminId) &&
+          isPrimarySuperAdminEmail() &&
+          incoming().role == 'superadmin' &&
+          incoming().email == 'soviraj50@gmail.com'
+        )
+      );
+      allow delete: if isValidId(adminId) && isSuperAdmin() && adminId != request.auth.uid;
+    }
+
+    // Individual User Database (Private PII protected: owner or verified Admin only)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+
+      allow create: if isValidId(userId) && (
+        (
+          isOwner(userId) &&
+          incoming().userId == request.auth.uid &&
+          incoming().role in ['visitor', 'student'] &&
+          incoming().membershipStatus in ['unregistered', 'draft']
+        ) ||
+        isSuperAdmin()
+      );
+
+      allow update: if isValidId(userId) && (
+        // Super Admin has full user & role management control
+        isSuperAdmin() ||
+        // Regular Admins can update membership status and basic student/member role transitions, never admin/superadmin
+        (
+          isAdmin() &&
+          !incoming().diff(existing()).affectedKeys().hasAny(['userId', 'createdAt']) &&
+          (!(incoming().diff(existing()).affectedKeys().hasAny(['role'])) ||
+            (incoming().role in ['visitor', 'student', 'member', 'project_lead'] &&
+             existing().role in ['visitor', 'student', 'member', 'project_lead']))
+        ) ||
+        // Owner can update own profile fields without self-promoting role, approving status, or altering membership credentials
+        (
+          isOwner(userId) &&
+          !incoming().diff(existing()).affectedKeys().hasAny([
+            'role',
+            'userId',
+            'createdAt',
+            'escMemberId',
+            'accountStatus',
+            'approvalDate',
+            'approvedBy',
+            'startupTeamId',
+            'teamRole',
+          ]) &&
+          (
+            !incoming().diff(existing()).affectedKeys().hasAny(['membershipStatus']) ||
+            (
+              existing().membershipStatus in ['unregistered', 'draft', 'more_info_required'] &&
+              incoming().membershipStatus in ['draft', 'submitted']
+            )
+          )
+        )
+      );
+
+      allow delete: if isValidId(userId) && isSuperAdmin() && userId != request.auth.uid;
+    }
+
+    // Membership Applications
+    match /applications/{applicationId} {
+      allow get: if isValidId(applicationId) && isSignedIn() && (isOwner(existing().userId) || isAdmin());
+      allow list: if isSignedIn() && (isAdmin() || existing().userId == request.auth.uid);
+      allow create: if isValidId(applicationId) && isSignedIn() &&
+        incoming().userId == request.auth.uid &&
+        incoming().status in ['draft', 'submitted'] &&
+        (incoming().status != 'submitted' || incoming().termsAccepted == true) &&
+        !('adminNotes' in incoming()) &&
+        !('reviewedBy' in incoming());
+      allow update: if isValidId(applicationId) && (
+        (
+          isOwner(existing().userId) &&
+          existing().status in ['draft', 'more_info_required'] &&
+          incoming().userId == request.auth.uid &&
+          incoming().status in ['draft', 'submitted'] &&
+          (incoming().status != 'submitted' || incoming().termsAccepted == true) &&
+          !incoming().diff(existing()).affectedKeys().hasAny(['adminNotes', 'reviewedBy', 'createdAt'])
+        ) ||
+        isAdmin()
+      );
+      allow delete: if isValidId(applicationId) && (
+        isAdmin() ||
+        (isOwner(existing().userId) && existing().status == 'draft')
+      );
+    }
+
+    // Startup Ideas (Public only when explicitly approved/public; students submit as under_review)
+    match /ideas/{ideaId} {
+      allow get, list: if existing().isPublic == true || isOwner(existing().authorId) || isAdmin();
+      allow create: if isValidId(ideaId) && isSignedIn() &&
+        incoming().authorId == request.auth.uid &&
+        incoming().reviewStatus in ['pending', 'under_review'] &&
+        (incoming().isPublic == false || isAdmin());
+      allow update: if isValidId(ideaId) && (
+        (
+          isOwner(existing().authorId) &&
+          incoming().authorId == request.auth.uid &&
+          !incoming().diff(existing()).affectedKeys().hasAny([
+            'reviewStatus',
+            'adminFeedback',
+            'isPublic',
+            'reviewedBy',
+            'reviewedAt',
+            'decisionHistory'
+          ])
+        ) ||
+        isAdmin()
+      );
+      allow delete: if isValidId(ideaId) && (isOwner(existing().authorId) || isAdmin());
+    }
+
+    // Problems
+    match /problems/{problemId} {
+      allow get, list: if true;
+      allow create: if isValidId(problemId) && isSignedIn() && incoming().authorId == request.auth.uid;
+      allow update: if isValidId(problemId) && (
+        (
+          isSignedIn() &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['interestCount', 'interestedUserIds', 'updatedAt'])
+        ) ||
+        isOwner(existing().authorId) ||
+        isAdmin()
+      );
+      allow delete: if isValidId(problemId) && (isOwner(existing().authorId) || isAdmin());
+    }
+
+    // Engineering Projects Workspace
+    match /projects/{projectId} {
+      allow get, list: if true;
+      allow create: if isValidId(projectId) && isSignedIn() && (incoming().leaderId == request.auth.uid || isAdmin());
+      allow update: if isValidId(projectId) && (
+        (
+          isSignedIn() && (
+            existing().leaderId == request.auth.uid ||
+            (existing().teamMemberIds is list && request.auth.uid in existing().teamMemberIds)
+          )
+        ) ||
+        isAdmin()
+      );
+      allow delete: if isValidId(projectId) && ((isSignedIn() && existing().leaderId == request.auth.uid) || isAdmin());
+    }
+
+    // Project Join Applications
+    match /projectApplications/{appId} {
+      allow get, list: if isSignedIn() && (
+        existing().applicantId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isValidId(appId) && isSignedIn() &&
+        incoming().applicantId == request.auth.uid &&
+        incoming().status == 'pending';
+      allow update, delete: if isValidId(appId) && (
+        (isSignedIn() && existing().applicantId == request.auth.uid) ||
+        isAdmin()
+      );
+    }
+
+    // Certificates (Public verification read, Admin-only write)
+    match /certificates/{certId} {
+      allow get, list: if true;
+      allow create, update, delete: if isValidId(certId) && isAdmin();
+    }
+
+    // Challenges (Public reads published non-draft/non-archived challenges; Super Admin only write/publish/delete)
+    match /challenges/{challengeId} {
+      allow get, list: if existing().isPublished == true || existing().status in ['scheduled', 'live', 'registration_closed', 'completed'] || isSuperAdmin();
+      allow create, delete: if isValidId(challengeId) && isSuperAdmin();
+      allow update: if isValidId(challengeId) && (
+        isSuperAdmin() ||
+        (isSignedIn() && incoming().diff(existing()).affectedKeys().hasOnly(['registeredCount', 'submissionCount', 'updatedAt']))
+      );
+    }
+
+    // Challenge Registrations
+    match /challengeRegistrations/{regId} {
+      allow get, list: if isSignedIn() && (existing().userId == request.auth.uid || isSuperAdmin());
+      allow create: if isValidId(regId) && isSignedIn() && incoming().userId == request.auth.uid;
+      allow update: if isValidId(regId) && isSignedIn() && (
+        isSuperAdmin() ||
+        (existing().userId == request.auth.uid && !incoming().diff(existing()).affectedKeys().hasAny(['userId', 'challengeId', 'registeredAt']))
+      );
+      allow delete: if isValidId(regId) && isSignedIn() && (existing().userId == request.auth.uid || isSuperAdmin());
+    }
+
+    // Challenge Submissions
+    match /challengeSubmissions/{subId} {
+      allow get, list: if isSignedIn() && (existing().userId == request.auth.uid || isSuperAdmin());
+      allow create: if isValidId(subId) && isSignedIn() &&
+        incoming().userId == request.auth.uid &&
+        incoming().reviewStatus == 'submitted';
+      allow update: if isValidId(subId) && isSignedIn() && (
+        isSuperAdmin() ||
+        (
+          existing().userId == request.auth.uid &&
+          existing().reviewStatus in ['submitted', 'needs_revision'] &&
+          !incoming().diff(existing()).affectedKeys().hasAny(['userId', 'challengeId', 'reviewerFeedback', 'score', 'submittedAt'])
+        )
+      );
+      allow delete: if isValidId(subId) && isSuperAdmin();
+    }
+
+    // Events (Public reads published events; Super Admin only create/edit/publish/unpublish/delete)
+    match /events/{eventId} {
+      allow get, list: if existing().isPublished == true || existing().status in ['scheduled', 'live', 'registration_closed', 'completed'] || isSuperAdmin();
+      allow update: if isValidId(eventId) && (
+        (isSignedIn() && incoming().diff(existing()).affectedKeys().hasOnly(['registeredCount', 'updatedAt'])) ||
+        isSuperAdmin()
+      );
+      allow create, delete: if isValidId(eventId) && isSuperAdmin();
+    }
+
+    // Event Registrations
+    match /eventRegistrations/{regId} {
+      allow get, list: if isSignedIn() && (existing().userId == request.auth.uid || isSuperAdmin());
+      allow create: if isValidId(regId) && isSignedIn() && incoming().userId == request.auth.uid;
+      allow update, delete: if isValidId(regId) && isSignedIn() && (isOwner(existing().userId) || isSuperAdmin());
+    }
+
+    // Opportunities (Public reads live/published opportunities; Super Admin only create/edit/publish/unpublish/delete)
+    match /opportunities/{opportunityId} {
+      allow get, list: if existing().isPublished == true || existing().status == 'live' || isSuperAdmin();
+      allow create, delete: if isValidId(opportunityId) && isSuperAdmin();
+      allow update: if isValidId(opportunityId) && (
+        isSuperAdmin() ||
+        (isSignedIn() && incoming().diff(existing()).affectedKeys().hasOnly(['applicationsCount', 'updatedAt']))
+      );
+    }
+
+    // Opportunity Applications
+    match /opportunityApplications/{appId} {
+      allow get, list: if isSignedIn() && (existing().userId == request.auth.uid || isSuperAdmin());
+      allow create: if isValidId(appId) && isSignedIn() &&
+        incoming().userId == request.auth.uid &&
+        incoming().status == 'submitted';
+      allow update, delete: if isValidId(appId) && (
+        isSuperAdmin() ||
+        (isSignedIn() && existing().userId == request.auth.uid && !incoming().diff(existing()).affectedKeys().hasAny(['userId', 'opportunityId', 'adminNotes']))
+      );
+    }
+
+    // Website Announcements (Public reads active; Admins manage)
+    match /announcements/{announcementId} {
+      allow get, list: if existing().isActive == true || isAdmin();
+      allow create, update, delete: if isValidId(announcementId) && isAdmin();
+    }
+
+    // Critical Website Settings (Public read, Super Admin only write)
+    match /siteSettings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if isAdmin();
+      allow create, update, delete: if isValidId(settingId) && isSuperAdmin();
+    }
+
+    // Certificate Settings (Public read for rendering logos/signatures on verified certs, Super Admin only write)
+    match /certificateSettings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if isAdmin();
+      allow create, update, delete: if isValidId(settingId) && isSuperAdmin();
+    }
+
+    // User Notifications
+    match /notifications/{notificationId} {
+      allow get, list: if isSignedIn() && (existing().recipientId == request.auth.uid || isAdmin());
+      allow create: if isValidId(notificationId) && isAdmin();
+      allow update: if isValidId(notificationId) && (
+        (isSignedIn() && existing().recipientId == request.auth.uid &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['read'])) ||
+        isAdmin()
+      );
+      allow delete: if isValidId(notificationId) && isAdmin();
+    }
+
+    // Admin Audit Logs (Append-only by Admins; immutable once recorded)
+    match /adminLogs/{logId} {
+      allow get, list: if isAdmin();
+      allow create: if isValidId(logId) && isAdmin() && incoming().adminId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Private Support Requests (Strictly owner or verified Admin only; never publicly readable)
+    match /supportTickets/{ticketId} {
+      allow get: if isValidId(ticketId) && isSignedIn() && (isOwner(existing().userUid) || isAdmin());
+      allow list: if isSignedIn() && (isAdmin() || existing().userUid == request.auth.uid);
+      allow create: if isValidId(ticketId) && isSignedIn() &&
+        incoming().userUid == request.auth.uid &&
+        incoming().status == 'new';
+      allow update, delete: if isValidId(ticketId) && isAdmin();
+    }
+  }
+}

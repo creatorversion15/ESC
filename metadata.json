@@ -1,0 +1,6 @@
+{
+  "name": "ESC — Engineering Startup Company",
+  "description": "Engineering Startup Company (ESC) is an engineering and entrepreneurship-focused organisation that connects engineering students, innovators, startups and industry professionals to develop ideas, build products, explore opportunities and create real-world solutions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
